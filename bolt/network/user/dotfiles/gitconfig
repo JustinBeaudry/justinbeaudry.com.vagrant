@@ -1,0 +1,5 @@
+[color]
+  us = auto
+  ui = true
+[url "git@github.com:"]
+  insteadOf = "git://github.com/"

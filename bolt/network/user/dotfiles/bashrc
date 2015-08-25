@@ -1,0 +1,162 @@
+#################
+# colors
+#################
+TXTDEF='\[\e[0m\]'          # defaults
+BLDRED='\[\033[1;31m\]'     # bold red
+BLDGRE='\[\033[1;32m\]'     # bold green
+BLDYEL='\[\033[1;33m\]'     # bold yellow
+BLDPUR='\[\033[1;35m\]'     # bold purple
+BLDBLU='\[\033[1;36m\]'     # bold blue
+BLDWHT='\[\033[1;37m\]'     # bold white
+############################################################
+
+
+#################
+# Path
+#################
+function pathadd {
+  if [ -d "$1" ] && [[ ":$PATH:" != *":$1:"* ]]; then
+    PATH="$1:$PATH"
+  fi
+}
+
+pathadd "/usr/local/sbin"
+pathadd "/usr/local/bin"
+############################################################
+
+
+#################
+# env
+#################
+# Don't add duplicate commands or commands that start with a space to bash history
+HISTCONTROL=ignoreboth
+# Use vim
+export EDITOR=vim
+############################################################
+
+
+#################
+# aliases
+#################
+alias l='ls -l --color=auto'
+alias ls='ls --color=auto'
+alias rm='rm -i'
+alias cp='cp -i'
+alias mv='mv -i'
+alias vi='vim'
+alias sudo='sudo -i'
+
+# git
+alias gpom='git push origin master'
+alias glom='git pull origin master'
+alias gs='git status -sb'
+alias ga='git add'
+alias gA='git add -A'
+alias gc='git commit -m'
+alias gb='git branch'
+alias gbv='git branch -va'
+alias gd='git diff'
+alias gch='git checkout'
+############################################################
+
+
+#################
+# functions
+#################
+#  display file permissions in octal format
+function perms {
+  INPUT=*
+  if [ ! -z "$1" ]; then
+      INPUT=$@
+  fi
+  stat -c '%A %a %n' $INPUT
+}
+
+# make a directory and cd into it
+function md () {
+  mkdir -p "$@" && cd "$@";
+}
+
+# echo git branch of current directory
+get_git_branch() {
+  git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/'
+}
+
+# git push origin branch
+gpob() {
+  git push origin $(get_git_branch)
+}
+
+# git pull origin branch
+glob() {
+  git pull origin $(get_git_branch)
+}
+############################################################
+
+
+#################
+# prompt
+#################
+# https://code.google.com/p/iterm2/issues/detail?id=571
+# http://stackoverflow.com/questions/3058325/what-is-the-difference-between-ps1-and-prompt-command
+# http://stackoverflow.com/questions/1371261/get-current-directory-name-without-full-path-in-bash-script
+
+# show 2 levels of directory listing for iterm2 tab
+# check not running on local console
+if [ "$(tty | grep pts | wc -l)" -ge "1" ];then
+  DEV_PTS=1
+fi
+two_dirs() {
+  if [ -n "$DEV_PTS" ];then
+    local home_sign="$HOME" # non root bashrc uses "~"
+    local dir=${PWD%/*/*}
+    local last
+    if [ ${#dir} -gt 0 -a "$dir" != "$PWD" ];then
+      last=${PWD:${#dir}+1}
+    else
+      last=$PWD;
+    fi
+    if [ "$last" == "$HOME" ];then
+      last="$home_sign"
+    fi
+    if [ ""$(dirname "$last")"" == "$USER" ];then
+      last="$home_sign/${PWD##*/}"
+    else
+      if [[ "$(echo "$last" | cut -c 1)" != "/" && "$last" != "$home_sign" ]];then
+        last=".../$last"
+      fi
+    fi
+    local hostname="[$HOSTNAME] "
+    echo -ne "\033]0;${hostname}${last}\007"
+  fi
+}
+
+prompt_command() {
+  two_dirs
+}
+
+PROMPT_COMMAND="prompt_command"
+
+PROMPT_COLOR=$BLDBLU
+PRE_PROMPT="$BLDRED\u$BLDWHT@$TXTDEF"
+if [ $EUID -ne 0 ]; then
+  PRE_PROMPT="$TXTDEF\u$BLDWHT@$TXTDEF"
+fi
+PS1="$PRE_PROMPT$PROMPT_COLOR\H:$BLDWHT \w$TXTDEF\n\$ "
+############################################################
+
+
+#################
+# sources
+#################
+if [ -f /usr/local/lib/bolt/completion.sh ];then
+  source /usr/local/lib/bolt/completion.sh
+fi
+
+############################################################
+
+# Source global definitions
+if [ -f /etc/bashrc ]; then
+  source /etc/bashrc
+fi
+
