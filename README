@@ -1,0 +1,14 @@
+justinbeaudry.com vagrant
+========================
+
+## Getting Started
+
+```
+vagrant up
+vagrant ssh
+```
+
+## TODO
+
+setup provisions with [bolt](https://github.com/diffsky/bolt)
+
